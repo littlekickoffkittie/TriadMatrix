@@ -1,12 +1,14 @@
 import hashlib
 
 class Triad:
-    def __init__(self, transactions, parent_hash=None):
+    def __init__(self, transactions, parent_hash=None, coordinates=None):
         self.transactions = transactions
         self.parent_hash = parent_hash
         self.children = [None, None, None]
         self.merkle_root = self.calculate_merkle_root()
         self.pof_data = None  # To be implemented
+        self.coordinates = coordinates if coordinates else (0,)
+        self.level = len(self.coordinates) - 1
         self.hash = self.calculate_hash()
 
     def calculate_merkle_root(self):
@@ -29,7 +31,7 @@ class Triad:
         return transaction_hashes[0]
 
     def calculate_hash(self):
-        block_header = str(self.parent_hash) + str(self.merkle_root) + str(self.pof_data)
+        block_header = str(self.parent_hash) + str(self.merkle_root) + str(self.pof_data) + str(self.coordinates)
         return hashlib.sha256(block_header.encode()).hexdigest()
 
     def add_child(self, child_triad, index):
