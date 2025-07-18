@@ -6,24 +6,31 @@ class HierarchicalRecursiveConsensus:
         self.fault_tolerance = fault_tolerance
 
     def _simulate_pbft(self, committee_size):
-        """Simulates a PBFT consensus round."""
-        # In a real implementation, this would be a complex messaging process.
-        # Here, we just simulate the outcome based on fault tolerance.
+        """Simulates a PBFT consensus round with pre-prepare, prepare, and commit phases."""
         num_faulty = int(committee_size * self.fault_tolerance)
         num_honest = committee_size - num_faulty
 
-        # Consensus is reached if honest nodes > 2 * faulty nodes
-        return num_honest > 2 * num_faulty
+        # A supermajority is required for consensus in PBFT (2/3 of the nodes)
+        required_votes = 2 * committee_size // 3 + 1
+
+        # Phase 1: Pre-prepare (Primary sends a proposal)
+        # We assume the primary is honest for this simulation.
+
+        # Phase 2: Prepare (Nodes vote on the proposal)
+        prepare_votes = sum(1 for _ in range(num_honest) if random.random() > 0.1) # 90% chance of voting
+        if prepare_votes < required_votes:
+            return False
+
+        # Phase 3: Commit (Nodes commit to the block)
+        commit_votes = sum(1 for _ in range(num_honest) if random.random() > 0.1) # 90% chance of voting
+        if commit_votes < required_votes:
+            return False
+
+        return True
 
     def achieve_local_consensus(self, triad, committee_size=10):
         """Achieves consensus at the local (leaf) level."""
-        print(f"Achieving local consensus for Triad {triad.hash} with committee of {committee_size}...")
-        if self._simulate_pbft(committee_size):
-            print("Local consensus successful.")
-            return True
-        else:
-            print("Local consensus failed.")
-            return False
+        return self._simulate_pbft(committee_size)
 
     def propagate_consensus(self, triad):
         """Propagates consensus results up the Triad Matrix."""
@@ -37,15 +44,13 @@ class HierarchicalRecursiveConsensus:
                 # Here, we'll just check if all children have reached consensus.
                 all_children_have_consensus = all(
                     child is not None and child.pof_data is not None
-                    for child in parent_triad.children
+                    for child in parent_triad.children if child is not None
                 )
 
                 if all_children_have_consensus:
-                    print(f"Propagating consensus from children of {parent_triad.hash}...")
                     return self.propagate_consensus(parent_triad)
         else:
             # Root triad
-            print(f"Consensus reached at root Triad {triad.hash}.")
             return True
 
         return False

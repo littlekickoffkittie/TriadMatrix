@@ -1,12 +1,16 @@
 class WacToken:
-    def __init__(self, initial_supply=1000000):
+    def __init__(self, initial_supply=1000000, max_stake_percent=0.1):
         self.total_supply = initial_supply
         self.balances = {"genesis": initial_supply}
         self.staked_balances = {}
         self.proposals = {}
+        self.max_stake = initial_supply * max_stake_percent
 
     def get_balance(self, address):
         return self.balances.get(address, 0)
+
+    def get_total_staked(self):
+        return sum(self.staked_balances.values())
 
     def transfer(self, from_address, to_address, amount):
         if self.get_balance(from_address) >= amount:
@@ -20,9 +24,10 @@ class WacToken:
         self.balances[address] = self.get_balance(address) + amount
 
     def stake(self, address, amount):
-        if self.get_balance(address) >= amount:
+        current_stake = self.staked_balances.get(address, 0)
+        if self.get_balance(address) >= amount and current_stake + amount <= self.max_stake:
             self.balances[address] -= amount
-            self.staked_balances[address] = self.staked_balances.get(address, 0) + amount
+            self.staked_balances[address] = current_stake + amount
             return True
         return False
 

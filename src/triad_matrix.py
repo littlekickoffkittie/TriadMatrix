@@ -9,9 +9,12 @@ class TriadMatrix:
 
     def add_triad(self, transactions, parent_hash):
         if parent_hash not in self.nodes:
-            raise ValueError("Parent triad not found")
+            raise ValueError(f"Parent triad with hash {parent_hash} not found")
 
         parent_triad = self.nodes[parent_hash]
+
+        if all(child is not None for child in parent_triad.children):
+            raise Exception(f"Parent triad {parent_hash} already has three children.")
 
         # Find an empty child slot to add the new triad
         for i in range(3):
@@ -22,8 +25,6 @@ class TriadMatrix:
                 self.nodes[new_triad.hash] = new_triad
                 self.nodes_by_coordinates[new_triad.coordinates] = new_triad
                 return new_triad
-
-        raise Exception("No empty child slot found for parent triad.")
 
 
     def get_triad(self, triad_hash):
